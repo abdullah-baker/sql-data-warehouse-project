@@ -80,98 +80,97 @@ maintenance nvarchar(50)
 )
 
 
+
+
+====================================
+
+
+
+EXECUTE  staging.load_staging;
+
+
 CREATE OR ALTER PROCEDURE staging.load_staging AS
 BEGIN
 	
+	PRINT '============================================================';
+	PRINT 'Loading Staging Layer';
+	PRINT '============================================================';
+
+	PRINT '------------------------------------------------------------';
+	PRINT 'Loading CRM Tables';
+	PRINT '------------------------------------------------------------';
+
+	PRINT '>> Truncating Table: staging.crm_cust_info';
 	TRUNCATE TABLE staging.crm_cust_info;
 	
+	PRINT '>> Inserting Data Into Table: staging.crm_cust_info';
 	BULK INSERT staging.crm_cust_info 
 		FROM 'C:\Users\abdul\OneDrive\Desktop\dwh_project\source_crm\cust_info.csv'
-	
 	WITH (
 		FIRSTROW = 2,
 		FIELDTERMINATOR = ',',
 		TABLOCK
 		);
 	
-	
-	
+	PRINT '>> Truncating Table: staging.crm_prd_info';
 	TRUNCATE TABLE staging.crm_prd_info;
-	
+	PRINT '>> Inserting Data Into Table: staging.crm_prd_info';
 	BULK INSERT staging.crm_prd_info
 		FROM 'C:\Users\abdul\OneDrive\Desktop\dwh_project\source_crm\prd_info.csv'
-	
 	WITH (
 		FIRSTROW = 2,
 		FIELDTERMINATOR = ',',
 		TABLOCK
 		);
 	
-	
-	
-	
+	PRINT '>> Truncating Table: staging.crm_sales_details';
 	TRUNCATE TABLE staging.crm_sales_details;
-	
+	PRINT '>> Inserting Data Into Table: staging.crm_sales_details';
 	BULK INSERT staging.crm_sales_details
 		FROM 'C:\Users\abdul\OneDrive\Desktop\dwh_project\source_crm\sales_details.csv'
-	
 	WITH (
 		FIRSTROW = 2,
 		FIELDTERMINATOR = ',',
 		TABLOCK
 		);
 	
+	PRINT '------------------------------------------------------------';
+	PRINT 'Loading ERP Tables';
+	PRINT '------------------------------------------------------------';
 	
 	
+	PRINT '>> Truncating Table: staging.erp_cust_az12';
 	TRUNCATE TABLE staging.erp_cust_az12;
-	
+	PRINT '>> Inserting Data Into Table: staging.erp_cust_az12';
 	BULK INSERT staging.erp_cust_az12
 		FROM 'C:\Users\abdul\OneDrive\Desktop\dwh_project\source_erp\CUST_AZ12.csv'
-	
 	WITH (
 		FIRSTROW = 2,
 		FIELDTERMINATOR = ',',
 		TABLOCK
 		);
 	
-	
-	
-	
+	PRINT '>> Truncating Table: staging.erp_loc_a101';
 	TRUNCATE TABLE staging.erp_loc_a101;
-	
+	PRINT '>> Inserting Data Into Table: staging.erp_loc_a101';
 	BULK INSERT staging.erp_loc_a101
 		FROM 'C:\Users\abdul\OneDrive\Desktop\dwh_project\source_erp\LOC_A101.csv'
-	
 	WITH (
 		FIRSTROW = 2,
 		FIELDTERMINATOR = ',',
 		TABLOCK
 		);
 	
-	
-	
+	PRINT '>> Truncating Table: staging.erp_px_cat_g1v2';
 	TRUNCATE TABLE staging.erp_px_cat_g1v2;
-	
+	PRINT '>> Inserting Data Into Table: staging.erp_px_cat_g1v2';
 	BULK INSERT staging.erp_px_cat_g1v2
 		FROM 'C:\Users\abdul\OneDrive\Desktop\dwh_project\source_erp\PX_CAT_G1V2.csv'
-	
 	WITH (
 		FIRSTROW = 2,
 		FIELDTERMINATOR = ',',
 		TABLOCK
 		);
-
-
-END
-
-
-
-
-
-
-
-
-
 
 
 
