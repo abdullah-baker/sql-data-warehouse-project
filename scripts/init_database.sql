@@ -171,7 +171,7 @@ BEGIN
 		FIELDTERMINATOR = ',',
 		TABLOCK
 		);
-
+END
 
 
 
