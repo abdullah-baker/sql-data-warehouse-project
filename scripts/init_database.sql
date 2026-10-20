@@ -89,11 +89,17 @@ maintenance nvarchar(50)
 EXECUTE  staging.load_staging;
 
 
+
 CREATE OR ALTER PROCEDURE staging.load_staging AS
 BEGIN
-	DECLARE @start_time DATETIME, @end_time DATETIME;
+	DECLARE @start_time DATETIME,
+			@end_time DATETIME,
+			@batch_start_time DATETIME,
+			@batch_end_time DATETIME;
 
+			
 	BEGIN TRY
+		SET @batch_start_time = GETDATE();
 		
 		PRINT '============================================================';
 		PRINT 'Loading Staging Layer';
@@ -116,7 +122,7 @@ BEGIN
 			TABLOCK
 			);
 		SET @end_time = GETDATE();
-		PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + 'secondS';
+		PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
 		PRINT '------------------------------------------------------------';
 		
 		
@@ -132,7 +138,7 @@ BEGIN
 			TABLOCK
 			);
 		SET @end_time = GETDATE();
-		PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + 'secondS';
+		PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
 		PRINT '------------------------------------------------------------';
 		
 		
@@ -148,7 +154,7 @@ BEGIN
 			TABLOCK
 			);
 		SET @end_time = GETDATE();
-		PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + 'secondS';
+		PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
 		PRINT '------------------------------------------------------------';
 		
 		
@@ -169,7 +175,7 @@ BEGIN
 			TABLOCK
 			);
 		SET @end_time = GETDATE();
-		PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + 'secondS';
+		PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
 		PRINT '------------------------------------------------------------';
 		
 		
@@ -185,7 +191,7 @@ BEGIN
 			TABLOCK
 			);
 		SET @end_time = GETDATE();
-		PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + 'secondS';
+		PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
 		PRINT '------------------------------------------------------------';
 		
 		
@@ -200,9 +206,17 @@ BEGIN
 			FIELDTERMINATOR = ',',
 			TABLOCK
 			);
+		
 		SET @end_time = GETDATE();
-		PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + 'secondS';
-		PRINT '------------------------------------------------------------';	
+		PRINT '>> Load Duration: ' + CAST(DATEDIFF(second, @start_time, @end_time) AS NVARCHAR) + ' seconds';
+		PRINT '------------------------------------------------------------';
+				
+		
+		SET @batch_end_time = GETDATE();
+		PRINT '==========================================='
+		PRINT 'Loading Staging is Completed';
+		PRINT '    - Total Load Duration: ' + CAST(DATEDIFF(SECOND, @batch_start_time, @batch_end_time) AS NVARCHAR) + ' seconds';
+		PRINT '==========================================='
 	
 	END TRY
 	BEGIN CATCH
@@ -214,3 +228,6 @@ BEGIN
 		PRINT '==========================================='
 	END CATCH
 END
+
+
+
