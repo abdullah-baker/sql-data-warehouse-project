@@ -19,12 +19,6 @@ Usage Example:
 */
 
 
-
-
-
-
-
-
 EXECUTE intermediate.load_intermediate
 
 CREATE OR ALTER PROCEDURE intermediate.load_intermediate AS
