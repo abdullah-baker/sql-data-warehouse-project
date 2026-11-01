@@ -7,7 +7,7 @@ Script Purpose:
     populate the 'intermediate' schema tables from the 'staging' schema.
   Actions Performed:
     - Truncates intermediate tables.
-    - Inserts transformed and cleansed data from Bronze into Silver tables.
+    - Inserts transformed and cleansed data from staging into intermediate tables.
 
 Parameters:
     None.
