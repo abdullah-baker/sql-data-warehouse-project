@@ -1,12 +1,12 @@
 /*
 ===========================================================================
-Stored Procedure: Load Silver Layer (staging -> intermediate)
+Stored Procedure: Load intermediate Layer (staging -> intermediate)
 ===========================================================================
 Script Purpose:
     This stored procedure performs the ETL (Extract, Transform, Load) process to
     populate the 'intermediate' schema tables from the 'staging' schema.
   Actions Performed:
-    - Truncates Silver tables.
+    - Truncates intermediate tables.
     - Inserts transformed and cleansed data from Bronze into Silver tables.
 
 Parameters:
