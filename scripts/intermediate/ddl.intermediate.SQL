@@ -1,11 +1,11 @@
 /*
 ===========================================================================
-DDL Script: Create Silver Tables
+DDL Script: Create intermediate Tables
 ===========================================================================
 Script Purpose:
-    This script creates tables in the 'silver' schema, dropping existing tables
+    This script creates tables in the 'intermediate' schema, dropping existing tables
     if they already exist.
-    Run this script to re-define the DDL structure of 'bronze' Tables
+    Run this script to re-define the DDL structure of 'staging' Tables
 ===========================================================================
 */
 
