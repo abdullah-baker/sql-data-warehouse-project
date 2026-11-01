@@ -1,3 +1,4 @@
+
 IF OBJECT_ID ('intermediate.crm_cust_info' , 'U') IS NOT NULL 
 	DROP TABLE intermediate.crm_cust_info;
 CREATE TABLE intermediate.crm_cust_info
@@ -18,12 +19,13 @@ IF OBJECT_ID ('intermediate.crm_prd_info' , 'U') IS NOT NULL
 CREATE TABLE intermediate.crm_prd_info
 ( 
 prd_id int,
+cat_id nvarchar(50),
 prd_key nvarchar(50),
 prd_nm nvarchar(50),
 prd_cost int,
 prd_line nvarchar(50),
-prd_start_dt datetime,
-prd_end_dt datetime,
+prd_start_dt date,
+prd_end_dt date,
 dwh_create_date DATETIME2 DEFAULT GETDATE()
 );
 
@@ -34,13 +36,13 @@ CREATE TABLE intermediate.crm_sales_details
 (
 sls_ord_num nvarchar(50),
 sls_prd_key nvarchar(50),
-sls_cust_id int,
-sls_order_dt int,
-sls_ship_dt int,
-sls_due_dt int,
-sls_sales int,
-sls_quantity int,
-sls_price int,
+sls_cust_id INT,
+sls_order_dt DATE,
+sls_ship_dt DATE,
+sls_due_dt DATE,
+sls_sales INT,
+sls_quantity INT,
+sls_price INT,
 dwh_create_date DATETIME2 DEFAULT GETDATE()
 );
 
