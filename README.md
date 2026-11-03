@@ -731,6 +731,11 @@ The project establishes a foundation for future learning in:
 - Production Data Warehouse Design
 
 The ultimate goal is to transform raw operational data into trusted, structured, and actionable business information.
+<img width="4428" height="2532" alt="image" src="https://github.com/user-attachments/assets/1aaf83b1-d3c8-419a-a756-bff81135ce70" />
+<img width="6568" height="2908" alt="image" src="https://github.com/user-attachments/assets/0d494814-b3f2-4d94-9b83-563d2ba8171c" />
+<img width="4240" height="2348" alt="image" src="https://github.com/user-attachments/assets/1ff7c0ee-b3bd-49b2-aa09-25722f1eb01a" />
+
+
 
 
 <img width="4968" height="2448" alt="image" src="https://github.com/user-attachments/assets/f5f5543b-f950-457a-bfbc-602ce99c45a3" />
