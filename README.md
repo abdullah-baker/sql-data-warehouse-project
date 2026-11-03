@@ -736,12 +736,3 @@ The project establishes a foundation for future learning in:
 <img width="6568" height="2908" alt="image" src="https://github.com/user-attachments/assets/4eafa347-0e97-4b61-8db8-7579126d77f6" />
 <img width="4240" height="2348" alt="image" src="https://github.com/user-attachments/assets/254049be-d1a4-4297-8abd-09b26ff90587" />
 
-
-
-
-
-
-
-
-<img width="4968" height="2448" alt="image" src="https://github.com/user-attachments/assets/f5f5543b-f950-457a-bfbc-602ce99c45a3" />
-
