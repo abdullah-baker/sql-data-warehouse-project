@@ -1,548 +1,733 @@
-sql-data-warehouse-project
+# SQL Data Warehouse Project
 
-Light Speed is a PostgreSQL-based analytics engineering project built on top of an Odoo operational database.
+## Overview
 
-The goal of the project is to transform raw Odoo tables into clean, reliable, analytics-ready datasets that can be used by BI tools and dashboards.
+This project demonstrates the end-to-end development of a **SQL Data Warehouse** using Microsoft SQL Server.
 
-## Project Objective
+The goal is to build a structured data warehouse that integrates data from CRM and ERP source systems, transforms raw data into reliable datasets, and provides business-ready information for analytics and reporting.
 
-The source database contains a large number of operational Odoo tables inside the `public` schema.
+The project implements a three-layer data architecture:
 
-Instead of connecting dashboards directly to raw Odoo tables, this project introduces a structured analytics layer:
+1. **Staging Layer** — Raw data ingestion.
+2. **Intermediate Layer** — Data cleaning and transformation.
+3. **Marts Layer** — Business-ready dimensional modeling.
 
-```text
-Odoo / public
-      ↓
-analytics_staging
-      ↓
-analytics_intermediate
-      ↓
-analytics_marts
-      ↓
-BI / Dashboards
+The final analytical model follows a **Star Schema**, consisting of customer and product dimensions connected to a sales fact view.
+
+This is a hands-on learning project focused on understanding practical Data Engineering, Data Architecture, ETL, SQL, and Data Warehousing concepts.
+
+---
+
+## Project Objectives
+
+The main objectives are to:
+
+- Design and implement a Data Warehouse using SQL Server.
+- Integrate data from multiple source systems (CRM and ERP).
+- Build ETL processes using SQL Stored Procedures.
+- Perform data cleaning, standardization, and transformation.
+- Apply data quality checks to improve data reliability.
+- Implement dimensional modeling using a Star Schema.
+- Create Fact and Dimension views for analytical reporting.
+- Prepare business-ready datasets for BI tools and dashboards.
+- Practice SQL development, documentation, and version control using GitHub.
+
+---
+
+## Data Warehouse Architecture
+
+The project uses a layered architecture inspired by the Medallion Architecture.
+
+The layer names have been customized as follows:
+
+| Medallion Architecture | Project Schema | Purpose |
+|---|---|---|
+| Bronze | `staging` | Raw Data |
+| Silver | `intermediate` | Cleaned and Transformed Data |
+| Gold | `marts` | Business-Ready Data |
+
+### Data Flow
+
+```mermaid
+flowchart TD
+    A["CRM Source CSV Files"] --> C["Staging Layer"]
+    B["ERP Source CSV Files"] --> C
+    C --> D["Intermediate Layer"]
+    D --> E["Marts Layer"]
+    E --> F["BI and Analytics"]
 ```
 
-The project is developed domain by domain so that each business area can be understood, modeled, validated, and completed before moving to the next one.
+Each layer has a specific responsibility to ensure separation between raw data, transformation logic, and business reporting.
 
-## Database
+---
 
-Database name:
+## Database Structure
 
-```text
-light_speed
-```
-
-Main schemas:
+**Database Name:**
 
 ```text
-public
-analytics_staging
-analytics_intermediate
-analytics_marts
+DataWarehouse
 ```
 
-### `public`
-
-Contains the original Odoo source tables.
-
-Examples:
+**Database Management System:**
 
 ```text
-sale_order
-sale_order_line
-res_partner
-product_product
-product_template
-purchase_order
-account_move
-crm_lead
+Microsoft SQL Server
 ```
 
-The `public` schema is treated as the source layer and should not be modified for analytics purposes.
-
-## Analytics Architecture
-
-### 1. Staging Layer
-
-Schema:
+**Schemas:**
 
 ```text
-analytics_staging
+staging
+intermediate
+marts
 ```
 
-Purpose:
+### Schema Responsibilities
 
-The staging layer provides a cleaned and standardized representation of source tables.
+| Schema | Responsibility |
+|---|---|
+| `staging` | Stores raw data extracted from source systems. |
+| `intermediate` | Contains cleaned, validated, and transformed datasets. |
+| `marts` | Provides business-ready Fact and Dimension views. |
 
-Typical transformations include:
+---
 
-- Renaming columns to clear business-friendly names
-- Selecting only relevant columns
-- Standardizing data types
-- Cleaning text values where necessary
-- Handling null values when a defined business rule exists
-- Removing technical duplicates only when they are confirmed to be invalid
-- Preserving valid business duplicates
-- Keeping the original business meaning of the source data
+## 1. Staging Layer
 
-Example:
+**Schema:** `staging`
 
-```text
-public.sale_order
-        ↓
-analytics_staging.stg_sale_orders
+### Purpose
+
+The Staging Layer serves as the initial landing area for data extracted from external source systems.
+
+Data is loaded from CSV files into SQL Server using the `BULK INSERT` command.
+
+The objective is to preserve source data as closely as practical before applying cleaning and transformation rules.
+
+### Source Systems
+
+The project integrates two source systems:
+
+**CRM — Customer Relationship Management**
+
+Contains information related to:
+
+- Customers
+- Products
+- Sales Transactions
+
+**ERP — Enterprise Resource Planning**
+
+Contains additional information related to:
+
+- Customer Demographics
+- Customer Locations
+- Product Categories
+
+### Staging Tables
+
+| Table Name | Source | Description |
+|---|---|---|
+| `staging.crm_cust_info` | CRM | Raw customer information. |
+| `staging.crm_prd_info` | CRM | Raw product information. |
+| `staging.crm_sales_details` | CRM | Raw sales transactions. |
+| `staging.erp_cust_az12` | ERP | Customer demographics and birth dates. |
+| `staging.erp_loc_a101` | ERP | Customer geographical information. |
+| `staging.erp_px_cat_g1v2` | ERP | Product categories and subcategories. |
+
+### Data Ingestion
+
+The project uses a SQL Server Stored Procedure:
+
+```sql
+EXEC staging.load_staging;
 ```
 
-Example transformation:
+The procedure performs the following operations:
+
+1. Starts the loading process.
+2. Clears existing staging data using `TRUNCATE TABLE`.
+3. Loads CRM data using `BULK INSERT`.
+4. Loads ERP data using `BULK INSERT`.
+5. Displays execution progress using `PRINT`.
+6. Measures loading duration.
+7. Handles supported runtime errors using `TRY...CATCH`.
+
+### Loading Strategy
+
+The Staging Layer uses a **Full Refresh** strategy.
+
+```sql
+TRUNCATE TABLE staging.crm_cust_info;
+
+BULK INSERT staging.crm_cust_info
+FROM 'C:\path\to\source_crm\cust_info.csv'
+WITH (
+    FIRSTROW = 2,
+    FIELDTERMINATOR = ',',
+    TABLOCK
+);
+```
+
+Existing rows are removed before new data is loaded.
+
+**Important:** The `TRUNCATE` operation removes all existing rows. CSV paths must be configured for the machine running SQL Server, and SQL Server must have permission to access them.
+
+### Initial Data Loading Results
+
+The following counts were observed during the initial staging validation:
+
+| Table | Records |
+|---|---:|
+| crm_cust_info | 18,493 |
+| crm_prd_info | 397 |
+| crm_sales_details | 60,398 |
+| erp_cust_az12 | 18,483 |
+| erp_loc_a101 | 18,484 |
+| erp_px_cat_g1v2 | 37 |
+| **Total** | **116,292** |
+
+These counts represent a recorded validation snapshot and should be rechecked after subsequent data loads.
+
+---
+
+## 2. Intermediate Layer
+
+**Schema:** `intermediate`
+
+### Purpose
+
+The Intermediate Layer transforms raw data into cleaned, standardized, and structured datasets.
+
+It applies data quality rules, handles inconsistent values, resolves duplicate records, and prepares information for dimensional modeling.
+
+### Intermediate Tables
+
+| Table Name | Description |
+|---|---|
+| `intermediate.crm_cust_info` | Cleaned customer information. |
+| `intermediate.crm_prd_info` | Standardized product information. |
+| `intermediate.crm_sales_details` | Cleaned sales transactions. |
+| `intermediate.erp_cust_az12` | Standardized customer demographics. |
+| `intermediate.erp_loc_a101` | Standardized customer locations. |
+| `intermediate.erp_px_cat_g1v2` | ERP product categories. |
+
+### Data Transformations
+
+#### Customer Data
+
+Transformations include:
+
+- Removing duplicate customer records using `ROW_NUMBER()`.
+- Retaining the most recent record based on customer creation date.
+- Removing unnecessary spaces using `TRIM()`.
+- Standardizing marital status.
+- Standardizing gender values.
+- Excluding records with missing customer IDs.
+
+#### Product Data
+
+Transformations include:
+
+- Extracting category identifiers using `SUBSTRING()`.
+- Standardizing category identifiers using `REPLACE()`.
+- Separating product numbers from composite product keys.
+- Replacing missing product costs with zero according to the project rule.
+- Standardizing product line descriptions using `CASE`.
+- Calculating product record end dates using `LEAD()`.
+
+#### Sales Data
+
+Transformations include:
+
+- Converting source date values into SQL `DATE` values.
+- Handling missing or invalid dates.
+- Applying business rules to sales amounts.
+- Correcting invalid or missing price values where sufficient source information exists.
+- Protecting calculations from division by zero using `NULLIF()`.
+
+#### ERP Customer Data
+
+Transformations include:
+
+- Removing the `NAS` prefix from customer identifiers.
+- Standardizing gender values.
+- Handling future birth dates according to the cleaning rules.
+
+#### ERP Location Data
+
+Transformations include:
+
+- Removing hyphens from customer identifiers.
+- Standardizing country names.
+- Converting `DE` to `Germany`.
+- Converting `US` and `USA` to `United States`.
+- Handling missing country values.
+
+### Data Loading
+
+The Intermediate Layer is loaded using:
+
+```sql
+EXEC intermediate.load_intermediate;
+```
+
+The Stored Procedure performs:
+
+1. Truncation of existing intermediate tables.
+2. Extraction of data from staging tables.
+3. Data cleaning and transformation.
+4. Insertion of transformed records.
+5. Execution progress monitoring.
+6. Per-table loading duration measurements.
+7. Total batch execution time measurement.
+8. Basic error handling.
+
+### Technical Metadata
+
+Intermediate tables include:
+
+```sql
+dwh_create_date DATETIME2 DEFAULT GETDATE()
+```
+
+This column records when data is inserted into the Intermediate Layer, provided the insert does not explicitly supply another value.
+
+---
+
+## 3. Marts Layer
+
+**Schema:** `marts`
+
+### Purpose
+
+The Marts Layer provides business-ready datasets designed for analytical queries, business intelligence, and reporting.
+
+The layer uses a dimensional model based on a **Star Schema**.
+
+It includes two Dimension Views and one Fact View.
+
+### Marts Views
+
+| View Name | Type | Description |
+|---|---|---|
+| `marts.dim_customers` | Dimension | Customer attributes and demographic information. |
+| `marts.dim_products` | Dimension | Current product attributes and classifications. |
+| `marts.fact_sales` | Fact | Sales transactions and business measures. |
+
+### Customer Dimension
+
+**View:** `marts.dim_customers`
+
+Combines customer data from CRM and ERP.
+
+Includes:
+
+- Customer Key
+- Customer ID
+- Customer Number
+- First Name
+- Last Name
+- Country
+- Marital Status
+- Gender
+- Birthdate
+- Customer Creation Date
+
+The view uses `LEFT JOIN` to enrich CRM customer records with demographic and geographical information from ERP.
+
+### Product Dimension
+
+**View:** `marts.dim_products`
+
+Combines CRM product information with ERP product categories.
+
+Includes:
+
+- Product Key
+- Product ID
+- Product Number
+- Product Name
+- Category ID
+- Category
+- Subcategory
+- Maintenance
+- Cost
+- Product Line
+- Start Date
+
+The view includes current product records using:
+
+```sql
+WHERE prd_end_dt IS NULL
+```
+
+During an earlier validation, 295 current product records were observed with 295 distinct product numbers.
+
+### Sales Fact
+
+**View:** `marts.fact_sales`
+
+Contains sales transactions with references to customer and product dimensions.
+
+Includes:
+
+- Order Number
+- Product Key
+- Customer Key
+- Order Date
+- Shipping Date
+- Due Date
+- Sales Amount
+- Sales Quantity (`sls_quantity`)
+- Price
+
+### Star Schema Relationships
+
+| Fact Column | Dimension Column | Relationship |
+|---|---|---|
+| `fact_sales.customer_key` | `dim_customers.customer_key` | Many-to-One |
+| `fact_sales.product_key` | `dim_products.product_key` | Many-to-One |
+
+The model supports analytical queries across customers, products, and sales.
+
+**Technical Note:** The current dimension keys are generated using `ROW_NUMBER()` inside regular views. They are logical identifiers, not guaranteed to be stable across source data changes. Persistent surrogate keys should be considered for production implementations.
+
+---
+
+## Data Modeling Concepts
+
+### Fact Tables
+
+Fact tables represent measurable business events.
+
+In this project, the Sales Fact represents sales order lines.
+
+Typical measures include:
+
+- Sales Amount
+- Quantity Sold
+- Unit Price
+
+### Dimension Tables
+
+Dimension tables contain descriptive attributes used to analyze facts.
+
+Examples include:
+
+- Customer Name
+- Country
+- Product Name
+- Product Category
+- Product Line
+
+### Grain
+
+The grain defines what one record represents.
+
+| View | Grain |
+|---|---|
+| `dim_customers` | One current customer record, assuming unique joins. |
+| `dim_products` | One current product record, assuming unique joins. |
+| `fact_sales` | One sales order line. |
+
+A customer may appear in multiple sales records while maintaining one current customer dimension record.
+
+Similarly, a product may appear in multiple sales transactions.
+
+---
+
+## Data Quality Validation
+
+Data quality checks are necessary to ensure that transformed information remains reliable.
+
+### Key Validation Checks
+
+- Verify row counts between layers.
+- Identify missing customer and product keys.
+- Detect duplicate business identifiers.
+- Validate date values.
+- Check invalid or missing sales amounts.
+- Verify source-to-target transformations.
+- Validate joins between facts and dimensions.
+- Identify unexpected record multiplication.
+
+### Example 1: Product Key Uniqueness
 
 ```sql
 SELECT
-    id             AS order_id,
-    partner_id     AS customer_id,
-    user_id        AS salesperson_id,
-    warehouse_id,
-    date_order     AS order_datetime,
-    state          AS order_status,
-    amount_untaxed AS subtotal_amount,
-    amount_tax     AS tax_amount,
-    amount_total   AS total_amount
-FROM public.sale_order;
+    COUNT(*) AS total_records,
+    COUNT(DISTINCT prd_key) AS unique_products
+FROM intermediate.crm_prd_info
+WHERE prd_end_dt IS NULL;
 ```
 
-The staging layer should remain close to the source and should not contain complex business aggregations.
-
-### 2. Intermediate Layer
-
-Schema:
-
-```text
-analytics_intermediate
-```
-
-Purpose:
-
-The intermediate layer combines staged datasets and applies reusable business logic.
-
-Typical transformations include:
-
-- Joins between staged tables
-- Business-rule calculations
-- Derived columns
-- Status mappings
-- Window functions
-- Deduplication based on business rules
-- Aggregations used by multiple downstream models
-- Date spines and other analytical spines
-
-Example:
-
-```text
-stg_sale_orders
-       +
-stg_sale_order_lines
-       +
-stg_customers
-       +
-stg_products
-       ↓
-int_sales_enriched
-```
-
-### Spine Concept
-
-A spine is used when reporting requires rows to exist even when no activity occurred.
-
-Example date spine:
-
-```text
-2026-01-01
-2026-01-02
-2026-01-03
-...
-```
-
-This allows dashboards to display zero-activity periods instead of completely missing dates.
-
-Other possible spines include:
-
-```text
-Date × Branch
-Month × Customer
-Month × Product
-Date × Employee
-```
-
-### 3. Mart Layer
-
-Schema:
-
-```text
-analytics_marts
-```
-
-Purpose:
-
-The mart layer contains final analytics-ready tables designed for dashboards, KPIs, and reporting.
-
-Dashboards should preferably consume this layer instead of querying the raw Odoo schema directly.
-
-Possible models:
-
-```text
-fact_sales
-dim_customer
-dim_product
-dim_date
-dim_salesperson
-```
-
-Example star schema:
-
-```text
-                 dim_customer
-                      |
-                      |
-dim_product ---- fact_sales ---- dim_date
-                      |
-                      |
-                dim_salesperson
-```
-
-The mart layer should be:
-
-- Easy to understand
-- Stable
-- Business-oriented
-- Fast to query
-- Tested
-- Ready for Power BI, Grafana, or other BI tools
-
-## Modeling Approach
-
-The project follows a domain-first approach.
-
-We do **not** attempt to model every Odoo table at once.
-
-For each business domain:
-
-```text
-1. Define the business domain
-2. Identify the business questions
-3. Define required KPIs
-4. Identify relevant Odoo source tables
-5. Understand the grain of each table
-6. Identify primary keys and foreign keys
-7. Understand table cardinality
-8. Validate source data quality
-9. Build staging models
-10. Build intermediate models
-11. Build mart models
-12. Validate final metrics
-13. Connect the mart to dashboards
-```
-
-Example domains:
-
-```text
-Sales
-Purchasing
-Inventory
-Accounting
-CRM
-Helpdesk
-Projects
-HR
-```
-
-Only one domain should be developed at a time until its analytics pipeline is stable.
-
-## Current Domain: Sales
-
-Initial source tables being analyzed include:
-
-```text
-public.sale_order
-public.sale_order_line
-public.res_partner
-public.product_product
-public.product_template
-public.product_category
-```
-
-Initial understanding:
-
-```text
-sale_order
-Grain: one row per sales order
-
-sale_order_line
-Grain: one row per sales order line
-```
-
-Expected relationship:
-
-```text
-sale_order.id
-      |
-      | 1 : N
-      |
-sale_order_line.order_id
-```
-
-This relationship must be validated using actual PostgreSQL PK/FK metadata before building downstream models.
-
-## Grain and Cardinality
-
-Before creating any join, the grain of both tables must be understood.
-
-Example:
-
-```text
-sale_order
-1 row = 1 order
-
-sale_order_line
-1 row = 1 order line
-```
-
-A one-to-many join may duplicate order-level measures.
-
-Example:
-
-```text
-Order 1001 = 1,000
-Order 1001 has 3 lines
-```
-
-After joining the order header to its lines:
-
-```text
-1001    1,000    Product A
-1001    1,000    Product B
-1001    1,000    Product C
-```
-
-A direct:
+### Example 2: Unmatched Sales Records
 
 ```sql
-SUM(amount_total)
+SELECT
+    COUNT(*) AS total_sales,
+
+    SUM(
+        CASE WHEN product_key IS NULL
+        THEN 1 ELSE 0 END
+    ) AS missing_products,
+
+    SUM(
+        CASE WHEN customer_key IS NULL
+        THEN 1 ELSE 0 END
+    ) AS missing_customers
+
+FROM marts.fact_sales;
 ```
 
-would incorrectly return:
+### Example 3: Duplicate Customer Identifiers
 
-```text
-3,000
+```sql
+SELECT
+    Customer_id,
+    COUNT(*) AS duplicate_count
+FROM marts.dim_customers
+GROUP BY Customer_id
+HAVING COUNT(*) > 1;
 ```
 
-instead of:
+### Data Quality Principles
+
+1. Understand the grain before joining tables.
+2. Do not assume that joins preserve row counts.
+3. Validate duplicates before removing them.
+4. Preserve raw source information in staging.
+5. Apply transformations using defined business rules.
+6. Verify calculated metrics against source information.
+7. Check for unmatched dimension records.
+8. Document transformation assumptions and known limitations.
+
+---
+
+## Project Repository Structure
+
+The following structure organizes SQL scripts by data warehouse layer.
 
 ```text
-1,000
-```
-
-Therefore:
-
-> Never create a join before understanding the grain and cardinality of both datasets.
-
-## Data Quality Principles
-
-Before a source table is used in analytics, validate:
-
-- Row count
-- Primary key uniqueness
-- Null values in important fields
-- Foreign-key integrity
-- Duplicate records
-- Valid status values
-- Date ranges
-- Unexpected negative or zero values
-- Orphan records
-- Join multiplication
-- Business-rule consistency
-
-Do not use `SELECT DISTINCT` as a general solution for duplicates.
-
-A duplicate-looking row may represent a valid business event.
-
-Technical duplicates should only be removed after their cause and business meaning are understood.
-
-## Naming Convention
-
-Recommended prefixes:
-
-```text
-stg_   → staging models
-int_   → intermediate models
-fact_  → fact tables
-dim_   → dimension tables
-```
-
-Examples:
-
-```text
-analytics_staging.stg_sale_orders
-analytics_staging.stg_sale_order_lines
-
-analytics_intermediate.int_sales_enriched
-analytics_intermediate.int_daily_sales
-
-analytics_marts.fact_sales
-analytics_marts.dim_customer
-analytics_marts.dim_product
-analytics_marts.dim_date
-```
-
-Use lowercase `snake_case` for database objects.
-
-Example:
-
-```text
-customer_id
-order_date
-total_amount
-salesperson_id
-```
-
-## Suggested Repository Structure
-
-```text
-light-speed/
+sql-data-warehouse-project/
 │
 ├── README.md
-├── sql/
+│
+├── scripts/
 │   ├── staging/
-│   │   ├── sales/
-│   │   ├── purchasing/
-│   │   └── inventory/
+│   │   ├── ddl_staging.sql
+│   │   └── proc_load_staging.sql
 │   │
 │   ├── intermediate/
-│   │   ├── sales/
-│   │   ├── purchasing/
-│   │   └── inventory/
+│   │   ├── ddl_intermediate.sql
+│   │   └── proc_load_intermediate.sql
 │   │
-│   ├── marts/
-│   │   ├── sales/
-│   │   ├── purchasing/
-│   │   └── inventory/
-│   │
-│   └── tests/
+│   └── gold/
+│       └── ddl_gold.sql
 │
-├── docs/
-│   ├── architecture.md
-│   ├── data_dictionary.md
-│   └── source_relationships.md
-│
-└── dashboards/
+└── docs/
+    └── data_catalog.md
 ```
 
-A possible Sales structure:
+This is a suggested organization; file paths should match the actual repository.
 
-```text
-sql/
-├── staging/
-│   └── sales/
-│       ├── stg_sale_orders.sql
-│       ├── stg_sale_order_lines.sql
-│       ├── stg_customers.sql
-│       └── stg_products.sql
-│
-├── intermediate/
-│   └── sales/
-│       ├── int_sales_enriched.sql
-│       └── int_daily_sales.sql
-│
-└── marts/
-    └── sales/
-        ├── fact_sales.sql
-        ├── dim_customer.sql
-        ├── dim_product.sql
-        └── dim_date.sql
+The `gold` folder name is retained in this example, while the corresponding SQL Server schema is named `marts`.
+
+---
+
+## Getting Started
+
+### Prerequisites
+
+- Microsoft SQL Server
+- SQL Server Management Studio or DBeaver
+- CRM and ERP source CSV files
+- Access permissions for SQL Server to read source files
+
+### Step 1: Prepare the Database
+
+Create or select the `DataWarehouse` database and ensure these schemas exist:
+
+```sql
+CREATE SCHEMA staging;
+GO
+
+CREATE SCHEMA intermediate;
+GO
+
+CREATE SCHEMA marts;
+GO
 ```
 
-## Development Rules
+These commands are intended for initial setup. Do not recreate schemas that already exist.
 
-1. Do not modify Odoo source tables in `public`.
-2. Do not create dashboard logic directly on raw source tables unless required for investigation.
-3. Understand the grain before joining tables.
-4. Validate PK/FK relationships instead of assuming them from column names.
-5. Keep staging transformations simple.
-6. Put reusable joins and business logic in the intermediate layer.
-7. Keep marts focused on reporting and business consumption.
-8. Validate row counts before and after joins.
-9. Document important business rules.
-10. Complete one domain before expanding to another.
+### Step 2: Create Staging Tables
 
-## Tools
+Run the Staging DDL script to create the six source tables.
 
-Current development environment:
+### Step 3: Load Staging Data
 
-```text
-PostgreSQL
-DBeaver
-Git / GitHub
+Execute:
+
+```sql
+EXEC staging.load_staging;
 ```
 
-Target BI tools may include:
+Confirm the loaded row counts and inspect representative records.
 
-```text
-Power BI
-Grafana
+### Step 4: Create Intermediate Tables
+
+Run the Intermediate DDL script.
+
+### Step 5: Load Intermediate Data
+
+Execute:
+
+```sql
+EXEC intermediate.load_intermediate;
 ```
 
-## Local Development
+Validate the transformations and data quality.
 
-Example PostgreSQL connection:
+### Step 6: Create Marts Views
 
-```text
-Host: localhost
-Port: 5432
-Database: light_speed
+Create the views in dependency order:
+
+1. `marts.dim_customers`
+2. `marts.dim_products`
+3. `marts.fact_sales`
+
+Use separate SQL Server batches for each `CREATE VIEW` statement.
+
+### Step 7: Validate the Analytical Model
+
+```sql
+SELECT *
+FROM marts.dim_customers;
+
+SELECT *
+FROM marts.dim_products;
+
+SELECT *
+FROM marts.fact_sales;
 ```
 
-Credentials must never be stored in this repository.
+Validate row counts, key uniqueness, and relationships before consuming the data.
 
-Do not commit:
+**Warning:** Some project scripts use `DROP TABLE` or `TRUNCATE TABLE`. Running them may permanently replace existing table data. Review each script before execution.
 
-```text
-.env
-passwords
-database backups
-production credentials
-private connection strings
-```
+---
+
+## Analytics and Reporting
+
+The Marts Layer can support analytical reporting such as:
+
+- Total Sales Revenue
+- Total Quantity Sold
+- Sales by Customer
+- Sales by Country
+- Sales by Product
+- Sales by Category
+- Sales by Product Line
+- Sales Trends Over Time
+
+These datasets can be consumed by BI tools such as Power BI, Metabase, and other SQL-compatible reporting applications.
+
+---
+
+## Tools and Technologies
+
+| Technology | Purpose |
+|---|---|
+| Microsoft SQL Server | Data Warehouse database |
+| T-SQL | Data extraction, transformation, and modeling |
+| SSMS | Database development and execution |
+| DBeaver | SQL development and data inspection |
+| CSV Files | CRM and ERP source datasets |
+| Git and GitHub | Version control and documentation |
+| Power BI / Metabase | Potential analytical reporting tools |
+
+---
 
 ## Project Status
 
-Current progress:
+### Completed or Implemented
 
-- [x] PostgreSQL environment prepared
-- [x] Odoo database restored
-- [x] Analytics schemas created
-- [x] Source tables available in `public`
-- [x] Initial Sales source discovery started
-- [ ] Complete Sales source relationship map
-- [ ] Validate Sales PK/FK relationships
-- [ ] Create Sales staging models
-- [ ] Create Sales intermediate models
-- [ ] Create Sales marts
-- [ ] Add data-quality tests
-- [ ] Build first Sales dashboard
-- [ ] Move to the next business domain
+- [x] Data Warehouse architecture defined
+- [x] Database schemas created
+- [x] Six Staging tables created
+- [x] CRM and ERP CSV ingestion implemented
+- [x] Staging loading Stored Procedure created
+- [x] Intermediate tables created
+- [x] Data cleaning and transformations implemented
+- [x] Intermediate loading Stored Procedure created
+- [x] Customer Dimension View defined
+- [x] Product Dimension View defined
+- [x] Sales Fact View defined
+- [x] Initial row-count and product-key validation performed
+
+### Further Improvements
+
+- [ ] Complete automated Data Quality tests
+- [ ] Validate all fact-to-dimension relationships
+- [ ] Improve error handling and execution logging
+- [ ] Introduce transaction management where appropriate
+- [ ] Implement persistent surrogate keys
+- [ ] Improve historical data handling
+- [ ] Build an analytical dashboard
+- [ ] Test the end-to-end pipeline after each change
+
+---
+
+## Key Learning Outcomes
+
+Through this project, the following concepts are practiced:
+
+- Data Warehouse Architecture
+- Layered Data Architecture
+- SQL DDL and DML
+- Database Schemas
+- Stored Procedures
+- Data Ingestion
+- ETL Pipelines
+- Data Cleaning
+- Data Transformation
+- Window Functions
+- Data Quality Validation
+- Dimensional Modeling
+- Fact and Dimension Tables
+- Star Schema
+- Business Keys and Surrogate Keys
+- SQL Joins and Relationships
+
+---
+
+## Project Reference
+
+This learning project follows the SQL Data Warehouse tutorial by **Data With Baraa**, with customized schema names and project documentation.
+
+Tutorial:
+
+https://www.youtube.com/watch?v=9GVqKuTVANE
+
+The project is developed for educational purposes, with additional technical review and validation as part of the learning process.
+
+---
 
 ## Long-Term Goal
 
-The final goal is to create a governed analytics layer between Odoo and reporting tools:
+The long-term objective is to develop the knowledge and practical skills required to design and build reliable, maintainable, and scalable analytical data systems.
 
-```text
-Operational Odoo Data
-          ↓
-Clean Analytics Models
-          ↓
-Reliable Business Metrics
-          ↓
-Consistent Dashboards
-          ↓
-Better Decision Making
-```
+The project establishes a foundation for future learning in:
 
-The analytics layer should allow business users to consume consistent KPIs without needing to understand the complexity of the underlying Odoo database.
+- Advanced Data Engineering
+- ETL and ELT Orchestration
+- Data Quality Automation
+- Data Modeling
+- Data Governance
+- Analytical Reporting
+- Production Data Warehouse Design
+
+The ultimate goal is to transform raw operational data into trusted, structured, and actionable business information.
