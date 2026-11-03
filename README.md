@@ -730,10 +730,15 @@ The project establishes a foundation for future learning in:
 - Analytical Reporting
 - Production Data Warehouse Design
 
-The ultimate goal is to transform raw operational data into trusted, structured, and actionable business information.
-<img width="4428" height="2532" alt="image" src="https://github.com/user-attachments/assets/1aaf83b1-d3c8-419a-a756-bff81135ce70" />
-<img width="6568" height="2908" alt="image" src="https://github.com/user-attachments/assets/0d494814-b3f2-4d94-9b83-563d2ba8171c" />
-<img width="4240" height="2348" alt="image" src="https://github.com/user-attachments/assets/1ff7c0ee-b3bd-49b2-aa09-25722f1eb01a" />
+
+<img width="4968" height="2448" alt="image" src="https://github.com/user-attachments/assets/e421d092-8af8-497a-9c56-7031ffb44a0a" />
+<img width="4428" height="2532" alt="image" src="https://github.com/user-attachments/assets/61fb5bb8-a985-46fd-a20b-99602aab34c4" />
+<img width="6568" height="2908" alt="image" src="https://github.com/user-attachments/assets/4eafa347-0e97-4b61-8db8-7579126d77f6" />
+<img width="4240" height="2348" alt="image" src="https://github.com/user-attachments/assets/254049be-d1a4-4297-8abd-09b26ff90587" />
+
+
+
+
 
 
 
