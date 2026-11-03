@@ -1,3 +1,22 @@
+/*
+===============================================================================
+DDL Script: Create Marts Views
+===============================================================================
+Script Purpose:
+    This script creates views for the Marts layer in the data warehouse.
+    The Marts layer represents the final dimension and fact views (Star Schema).
+
+    Each view performs transformations and combines data from the
+    Intermediate layer to produce a clean, enriched, and business-ready dataset.
+
+Usage:
+    - These views can be queried directly for analytics and reporting.
+===============================================================================
+*/
+
+
+
+
 CREATE VIEW marts.dim_customers As 
 SELECT
 ROW_NUMBER() OVER (ORDER BY cst_id) as customer_key,
